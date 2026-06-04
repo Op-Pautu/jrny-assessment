@@ -4,15 +4,6 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// not used anywhere yet
-function formatTask(task) {
-  return {
-    id: task.id,
-    title: task.title,
-    done: task.status === 'completed'
-  };
-}
-
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
