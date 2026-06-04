@@ -24,8 +24,14 @@ app.use('/api/tasks', taskRoutes);
 app.use('/health', healthRoutes);
 
 app.use((err, req, res, next) => {
-  console.log('Something went wrong:', err.message);
-  res.status(500).json({ error: err.message, stack: err.stack });
+  console.error('Server error:', err.message);
+
+  // Only expose stack trace in development
+  if (config.nodeEnv === 'development') {
+    return res.status(500).json({ error: err.message, stack: err.stack });
+  }
+
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 const PORT = config.port || 3000;

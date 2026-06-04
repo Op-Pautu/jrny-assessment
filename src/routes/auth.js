@@ -21,24 +21,35 @@ router.post('/register', async (req, res) => {
     const token = makeToken(user);
     res.status(201).json({ user, token });
   } catch (err) {
-    res.status(500).json({ error: err.message, stack: err.stack });
+    console.error('Register error:', err);
+    // Check for unique constraint violation (duplicate username/email)
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Username or email already exists' });
+    }
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log('Login attempt for', email);
 
-  const query = "SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "'";
-  const result = await pool.query(query);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1 AND password = $2',
+      [email, password]
+    );
 
-  if (result.rows.length === 0) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = result.rows[0];
+    const token = makeToken(user);
+    res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  const user = result.rows[0];
-  const token = makeToken(user);
-  res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
 });
 
 module.exports = router;
