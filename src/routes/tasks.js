@@ -1,8 +1,44 @@
 const express = require('express');
+const { body, validationResult, param } = require('express-validator');
 const pool = require('../db/connection');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
+
+const validateCreateTask = [
+  body('title')
+    .trim()
+    .notEmpty().withMessage('Title is required')
+    .isLength({ max: 255 }).withMessage('Title must not exceed 255 characters'),
+  body('description')
+    .trim()
+    .optional()
+    .isLength({ max: 10000 }).withMessage('Description must not exceed 10,000 characters'),
+  body('status')
+    .optional()
+    .isIn(['pending', 'in_progress', 'completed']).withMessage('Status must be one of: pending, in_progress, completed')
+];
+
+const validateUpdateTask = [
+  param('id')
+    .isInt().withMessage('Invalid task ID'),
+  body('title')
+    .trim()
+    .notEmpty().withMessage('Title is required')
+    .isLength({ max: 255 }).withMessage('Title must not exceed 255 characters'),
+  body('description')
+    .trim()
+    .optional()
+    .isLength({ max: 10000 }).withMessage('Description must not exceed 10,000 characters'),
+  body('status')
+    .optional()
+    .isIn(['pending', 'in_progress', 'completed']).withMessage('Status must be one of: pending, in_progress, completed')
+];
+
+const validateDeleteTask = [
+  param('id')
+    .isInt().withMessage('Invalid task ID')
+];
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
@@ -12,12 +48,16 @@ router.get('/', authMiddleware, async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('Get tasks error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, validateCreateTask, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
+  }
+
   const { title, description, status } = req.body;
 
   try {
@@ -27,12 +67,16 @@ router.post('/', authMiddleware, async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Create task error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', authMiddleware, validateUpdateTask, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
+  }
+
   const { title, description, status } = req.body;
   try {
     const result = await pool.query(
@@ -46,14 +90,17 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Update task error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authMiddleware, validateDeleteTask, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
+  }
+
   try {
-    // Fix SQL injection: use parameterized query
     const result = await pool.query(
       'DELETE FROM tasks WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.id]
@@ -65,7 +112,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
     res.json({ message: 'Task deleted' });
   } catch (err) {
-    console.error('Delete task error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
