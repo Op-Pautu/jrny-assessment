@@ -1,11 +1,31 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const pool = require('../db/connection');
 const config = require('../config');
 
 const router = express.Router();
+
+// Rate limiting
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per windowMs
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => config.nodeEnv !== 'production' // Skip rate limiting in development
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 requests per windowMs
+  message: 'Too many registration attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => config.nodeEnv !== 'production' // Skip rate limiting in development
+});
 
 // helper for generating tokens
 function makeToken(user) {
@@ -35,7 +55,7 @@ const validateLogin = [
     .isLength({ min: 8, max: 128 }).withMessage('Invalid credentials')
 ];
 
-router.post('/register', validateRegister, async (req, res) => {
+router.post('/register', registerLimiter, validateRegister, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array()[0].msg });
@@ -61,7 +81,7 @@ router.post('/register', validateRegister, async (req, res) => {
   }
 });
 
-router.post('/login', validateLogin, async (req, res) => {
+router.post('/login', loginLimiter, validateLogin, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: 'Invalid credentials' });
