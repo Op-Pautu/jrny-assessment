@@ -30,6 +30,11 @@ async function register() {
   if (data.token) {
     token = data.token;
     localStorage.setItem('token', token);
+    // Clear form fields
+    document.getElementById('reg-username').value = '';
+    document.getElementById('reg-email').value = '';
+    document.getElementById('reg-password').value = '';
+    showMessage(''); // Clear message
     showTasks();
   } else {
     showMessage(data.error || 'Registration failed');
@@ -49,6 +54,10 @@ async function login() {
   if (data.token) {
     token = data.token;
     localStorage.setItem('token', token);
+    // Clear form fields
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+    showMessage(''); // Clear message
     showTasks();
   } else {
     showMessage(data.error || 'Login failed');
@@ -92,12 +101,14 @@ async function createTask() {
   if (res.ok) {
     document.getElementById('task-title').value = '';
     document.getElementById('task-description').value = '';
+    showMessage(''); // Clear message on success
     loadTasks();
   } else {
     const data = await res.json();
     showMessage(data.error || 'Failed to create task');
   }
 }
+
 
 function logout() {
   token = null;
