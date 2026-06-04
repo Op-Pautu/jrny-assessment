@@ -1,14 +1,13 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/connection');
+const config = require('../config');
 
 const router = express.Router();
 
-const JWT_SECRET = "super_secret_key_123";
-
 // helper for generating tokens
 function makeToken(user) {
-  return jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+  return jwt.sign({ id: user.id, username: user.username }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
 }
 
 router.post('/register', async (req, res) => {

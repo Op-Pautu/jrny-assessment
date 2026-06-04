@@ -11,7 +11,10 @@ const healthRoutes = require('./routes/health');
 
 const app = express();
 
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: config.frontendUrl,
+  credentials: true
+}));
 app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));

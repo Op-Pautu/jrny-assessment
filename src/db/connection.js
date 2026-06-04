@@ -1,7 +1,9 @@
 const { Pool } = require('pg');
+const config = require('../config');
 
 const pool = new Pool({
-  connectionString: 'postgresql://admin:password123@localhost:5432/taskflow'
+  connectionString: config.databaseUrl,
+  ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false
 });
 
 pool.on('connect', () => {
@@ -9,11 +11,8 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.log('Unexpected database error', err);
+  console.error('Unexpected database error', err);
+  process.exit(-1);
 });
-
-// function query(text, params) {
-//   return pool.query(text, params);
-// }
 
 module.exports = pool;
