@@ -55,6 +55,8 @@ TaskFlow is a full-featured task management API with:
 - ✅ **Removed inline event handlers**: Replaced `onclick` attributes with `.addEventListener()` (CSP compliant)
 - ✅ **Content-Security-Policy added**: Prevents script injection attacks
 - ✅ **CSS class-based visibility**: Removed inline `style="display:none"` (CSP compliant)
+- ✅ **Form cleanup on success**: Clears input fields and validation messages after successful actions
+- ✅ **Input validation feedback**: Shows clear error messages for invalid input (empty title, username format, etc)
 
 ## Security Improvements
 
