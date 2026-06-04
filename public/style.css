@@ -73,3 +73,8 @@ li {
   margin-top: 16px;
   color: #de350b;
 }
+
+
+.hidden {
+  display: none;
+}

@@ -6,9 +6,14 @@ function showMessage(msg) {
 }
 
 function showTasks() {
-  document.getElementById('auth-section').style.display = 'none';
-  document.getElementById('tasks-section').style.display = 'block';
+  document.getElementById('auth-section').classList.add('hidden');
+  document.getElementById('tasks-section').classList.remove('hidden');
   loadTasks();
+}
+
+function showAuth() {
+  document.getElementById('auth-section').classList.remove('hidden');
+  document.getElementById('tasks-section').classList.add('hidden');
 }
 
 async function register() {
@@ -70,7 +75,12 @@ async function createTask() {
   const title = document.getElementById('task-title').value;
   const description = document.getElementById('task-description').value;
 
-  await fetch(API + '/tasks', {
+  if (!title.trim()) {
+    showMessage('Title is required');
+    return;
+  }
+
+  const res = await fetch(API + '/tasks', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -78,18 +88,32 @@ async function createTask() {
     },
     body: JSON.stringify({ title, description })
   });
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-description').value = '';
-  loadTasks();
+
+  if (res.ok) {
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-description').value = '';
+    loadTasks();
+  } else {
+    const data = await res.json();
+    showMessage(data.error || 'Failed to create task');
+  }
 }
 
 function logout() {
   token = null;
   localStorage.removeItem('token');
-  document.getElementById('auth-section').style.display = 'block';
-  document.getElementById('tasks-section').style.display = 'none';
+  showAuth();
 }
 
+// Event listeners for buttons (CSP compliant - no inline onclick handlers)
+document.getElementById('login-btn').addEventListener('click', login);
+document.getElementById('register-btn').addEventListener('click', register);
+document.getElementById('create-task-btn').addEventListener('click', createTask);
+document.getElementById('logout-btn').addEventListener('click', logout);
+
+// Show tasks only if user is logged in
 if (token) {
   showTasks();
+} else {
+  showAuth();
 }

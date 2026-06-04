@@ -49,6 +49,13 @@ TaskFlow is a full-featured task management API with:
 - ✅ Improved error responses
 - ✅ .gitignore comprehensive
 
+### Frontend Fixes
+- ✅ **XSS vulnerability fixed**: Replaced `innerHTML` with `textContent` for task display
+- ✅ **Auth state management**: Tasks section now hidden when logged out (security + UX)
+- ✅ **Removed inline event handlers**: Replaced `onclick` attributes with `.addEventListener()` (CSP compliant)
+- ✅ **Content-Security-Policy added**: Prevents script injection attacks
+- ✅ **CSS class-based visibility**: Removed inline `style="display:none"` (CSP compliant)
+
 ## Security Improvements
 
 ### Authentication & Password Security
@@ -81,6 +88,12 @@ TaskFlow is a full-featured task management API with:
 - Health check verifies database connection
 - Graceful error handling (no internal details exposed)
 - .gitignore prevents credential leaks
+
+### Frontend Security
+- **XSS Prevention**: Task titles displayed as text content, not HTML
+- **CSP Headers**: `script-src 'self' 'unsafe-inline'` allows only trusted scripts
+- **Auth-based UI**: Sensitive sections (tasks, logout) hidden until authenticated
+- **Event Listeners**: No inline `onclick` handlers (CSP-compliant)
 
 ## Local Development Setup
 
