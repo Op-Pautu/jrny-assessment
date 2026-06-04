@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const path = require('path');
 
@@ -16,7 +15,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(morgan('dev'));
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/api/auth', authRoutes);
@@ -36,8 +35,30 @@ app.use((err, req, res, next) => {
 
 const PORT = config.port || 3000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('TaskFlow server running on port ' + PORT);
 });
+
+// Graceful shutdown handling
+const shutdown = () => {
+  console.log('Received shutdown signal, closing server gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    const pool = require('./db/connection');
+    pool.end(() => {
+      console.log('Database pool closed');
+      process.exit(0);
+    });
+  });
+
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 module.exports = app;
